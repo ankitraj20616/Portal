@@ -1,11 +1,17 @@
 import * as ReactRouterDOM from "react-router-dom";
+import { AuthContext } from "../AuthProvider";
+import { useContext } from "react";
+
 const { Link, useNavigate, useLocation } = ReactRouterDOM;
-export const Navbar = ({ isLoggedIn, onLogout }) => {
+
+export const Navbar = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
 
   const handleLogoutClick = () => {
     onLogout();
+    setIsLoggedIn(false);
     navigate("/");
   };
 

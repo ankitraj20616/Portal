@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import * as ReactRouterDOM from "react-router-dom";
-
+import { AuthContext } from "../AuthProvider";
 const { useNavigate } = ReactRouterDOM;
 
 export const AuthForm = ({ mode, onSuccess }) => {
@@ -10,6 +10,7 @@ export const AuthForm = ({ mode, onSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { isLoggedIn, setIsLoggedIn } = useContext(AuthContext);
 
   const onSwitch = () => {
     setError(null);
@@ -22,8 +23,9 @@ export const AuthForm = ({ mode, onSuccess }) => {
     setError(null);
 
     const baseUrl = import.meta.env.VITE_BASE_URL;
+
     const endpoint =
-      mode === "register" ? `${baseUrl}/register/` : `${baseUrl}/login/`;
+      mode === "register" ? `${baseUrl}/register/` : `${baseUrl}/token/`;
 
     const payload =
       mode === "register"
@@ -47,16 +49,31 @@ export const AuthForm = ({ mode, onSuccess }) => {
           (data.username ? `Username: ${data.username[0]}` : null) ||
           (data.email ? `Email: ${data.email[0]}` : null) ||
           (data.password ? `Password: ${data.password[0]}` : null) ||
-          "Something went wrong. Please try again.";
+          "Authentication failed. Please check your credentials.";
         throw new Error(errorMsg);
       }
 
       if (mode === "register") {
-        alert("Registration successful! Please login.");
+        alert(
+          "Registration successful! Please login with your new credentials."
+        );
         navigate("/login");
       } else {
-        onSuccess({ name: username || "User", data });
-        navigate("/");
+        if (data.access && data.refresh) {
+          localStorage.setItem("access_token", data.access);
+          localStorage.setItem("refresh_token", data.refresh);
+          setIsLoggedIn(true);
+
+          onSuccess({
+            name: username,
+            tokens: { access: data.access, refresh: data.refresh },
+          });
+
+          // Redirect to home (which shows Hero or Dashboard logic later)
+          navigate("/dashboard");
+        } else {
+          throw new Error("Tokens not received from server.");
+        }
       }
     } catch (err) {
       setError(err.message);
@@ -88,6 +105,7 @@ export const AuthForm = ({ mode, onSuccess }) => {
               <input
                 type="text"
                 required
+                autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 bg-[#1a1c23] border border-gray-700 rounded-lg focus:outline-none focus:border-cyan-500 text-white transition-colors"
@@ -103,6 +121,7 @@ export const AuthForm = ({ mode, onSuccess }) => {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 bg-[#1a1c23] border border-gray-700 rounded-lg focus:outline-none focus:border-cyan-500 text-white transition-colors"
@@ -119,6 +138,9 @@ export const AuthForm = ({ mode, onSuccess }) => {
                 type="password"
                 required
                 minLength={8}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-[#1a1c23] border border-gray-700 rounded-lg focus:outline-none focus:border-cyan-500 text-white transition-colors"
@@ -129,7 +151,7 @@ export const AuthForm = ({ mode, onSuccess }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 mt-4 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-lg transition-all transform active:scale-[0.98] flex justify-center items-center shadow-lg shadow-cyan-500/20"
+              className="w-full py-3 mt-4 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-lg transition-all transform active:scale-[0.98] flex justify-center items-center shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
