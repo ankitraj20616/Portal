@@ -1,6 +1,8 @@
 import { useContext, useState } from "react";
 import * as ReactRouterDOM from "react-router-dom";
 import { AuthContext } from "../AuthProvider";
+import { axiosInstance } from "../axiosinstance";
+
 const { useNavigate } = ReactRouterDOM;
 
 export const AuthForm = ({ mode, onSuccess }) => {
@@ -22,10 +24,7 @@ export const AuthForm = ({ mode, onSuccess }) => {
     setIsLoading(true);
     setError(null);
 
-    const baseUrl = import.meta.env.VITE_BASE_URL;
-
-    const endpoint =
-      mode === "register" ? `${baseUrl}/register/` : `${baseUrl}/token/`;
+    const endpoint = mode === "register" ? "/register/" : "/token/";
 
     const payload =
       mode === "register"
@@ -33,50 +32,28 @@ export const AuthForm = ({ mode, onSuccess }) => {
         : { username, password };
 
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg =
-          data.detail ||
-          (data.username ? `Username: ${data.username[0]}` : null) ||
-          (data.email ? `Email: ${data.email[0]}` : null) ||
-          (data.password ? `Password: ${data.password[0]}` : null) ||
-          "Authentication failed. Please check your credentials.";
-        throw new Error(errorMsg);
-      }
+      const response = await axiosInstance.post(endpoint, payload);
+      const data = response.data;
 
       if (mode === "register") {
-        alert(
-          "Registration successful! Please login with your new credentials."
-        );
+        alert("Registration successful! Please login.");
         navigate("/login");
-      } else {
-        if (data.access && data.refresh) {
-          localStorage.setItem("access_token", data.access);
-          localStorage.setItem("refresh_token", data.refresh);
-          setIsLoggedIn(true);
-
-          onSuccess({
-            name: username,
-            tokens: { access: data.access, refresh: data.refresh },
-          });
-
-          // Redirect to home (which shows Hero or Dashboard logic later)
-          navigate("/dashboard");
-        } else {
-          throw new Error("Tokens not received from server.");
-        }
+        return;
       }
+
+      // LOGIN SUCCESS
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+
+      setIsLoggedIn(true);
+      onSuccess();
+
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(
+        err.response?.data?.detail ||
+          "Authentication failed. Check credentials."
+      );
     } finally {
       setIsLoading(false);
     }

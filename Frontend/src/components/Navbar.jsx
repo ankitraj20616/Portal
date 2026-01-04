@@ -11,7 +11,6 @@ export const Navbar = ({ onLogout }) => {
 
   const handleLogoutClick = () => {
     onLogout();
-    setIsLoggedIn(false);
     navigate("/");
   };
 
