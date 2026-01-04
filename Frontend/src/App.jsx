@@ -3,51 +3,61 @@ import { Navbar } from "./components/Navbar.jsx";
 import { Footer } from "./components/Footer.jsx";
 import { Hero } from "./components/Hero.jsx";
 import { AuthForm } from "./components/AuthForm.jsx";
-import { Dashboard } from "./components/Dashboard.jsx";
+import * as ReactRouterDOM from "react-router-dom";
 import { useState } from "react";
+
+const { BrowserRouter: Router, Routes, Route, Navigate } = ReactRouterDOM;
+
 function App() {
-  const [view, setView] = useState("landing");
   const [user, setUser] = useState(null);
 
-  const handleNavigate = (newView) => {
-    setView(newView);
-  };
-
-  const handleLogin = (name) => {
-    setUser({ name });
-    // Redirecting to landing for now since Dashboard is removed
-    setView("landing");
-    alert(`Welcome, ${name}! Dashboard is currently under construction.`);
+  const handleLogin = (userData) => {
+    setUser(userData);
   };
 
   const handleLogout = () => {
     setUser(null);
-    setView("landing");
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#1a1c23]">
-      <Navbar
-        onNavigate={handleNavigate}
-        isLoggedIn={!!user}
-        onLogout={handleLogout}
-        view={view}
-      />
+    <Router>
+      <div className="min-h-screen flex flex-col bg-[#1a1c23]">
+        <Navbar isLoggedIn={!!user} onLogout={handleLogout} />
 
-      <main className="flex-grow flex items-center justify-center px-4">
-        {view === "landing" && <Hero onLoginClick={() => setView("login")} />}
+        <main className="flex-grow flex items-center justify-center px-4">
+          <Routes>
+            <Route path="/" element={<Hero />} />
+            <Route
+              path="/login"
+              element={
+                user ? (
+                  <Navigate to="/" />
+                ) : (
+                  <AuthForm mode="login" onSuccess={handleLogin} />
+                )
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                user ? (
+                  <Navigate to="/" />
+                ) : (
+                  <AuthForm mode="register" onSuccess={handleLogin} />
+                )
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={user ? <Dashboard /> : <Navigate to="/login" />}
+            />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
 
-        {(view === "login" || view === "register") && (
-          <AuthForm
-            mode={view}
-            onSuccess={handleLogin}
-            onSwitch={() => setView(view === "login" ? "register" : "login")}
-          />
-        )}
-      </main>
-
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
