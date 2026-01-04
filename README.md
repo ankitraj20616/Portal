@@ -57,45 +57,6 @@ This flow ensures a seamless and secure authentication experience without manual
 
 ---
 
-## Project Structure
-
-Portal/
-│
-├── backend/
-│ ├── accounts/ # User authentication logic
-│ ├── api/ # Public and protected APIs
-│ ├── stock_prediction_main/
-│ │ ├── settings.py
-│ │ ├── urls.py
-│ │ ├── wsgi.py
-│ │ └── asgi.py
-│ ├── manage.py
-│ ├── db.sqlite3
-│ └── pyproject.toml
-│
-├── Frontend/
-│ ├── src/
-│ │ ├── assets/
-│ │ ├── components/
-│ │ │ ├── dashboard/
-│ │ │ │ └── Dashboard.jsx
-│ │ │ ├── AuthForm.jsx
-│ │ │ ├── Navbar.jsx
-│ │ │ ├── Hero.jsx
-│ │ │ └── Footer.jsx
-│ │ ├── AuthProvider.jsx
-│ │ ├── axiosinstance.js
-│ │ ├── App.jsx
-│ │ └── main.jsx
-│ ├── .env
-│ ├── package.json
-│ └── vite.config.js
-│
-└── README.md
-
-
----
-
 ## API Endpoints
 
 ### Authentication Endpoints
